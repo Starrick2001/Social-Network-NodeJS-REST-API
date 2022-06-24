@@ -2,6 +2,10 @@ const router = require("express").Router();
 const Post = require("../models/Post");
 const User = require("../models/User");
 
+//firebase
+const firebase = require("../firebase");
+const multer = require("multer");
+
 //create post
 router.post("/", async (req, res) => {
   const newPost = new Post(req.body);
@@ -84,12 +88,41 @@ router.get("/timeline/:userId", async (req, res) => {
 //get user's all posts
 router.get("/profile/:username", async (req, res) => {
   try {
-    const currentUser = await User.findOne({username: req.params.username});
+    const currentUser = await User.findOne({ username: req.params.username });
     const userPosts = await Post.find({ userId: currentUser._id });
     res.status(200).json(userPosts);
   } catch (err) {
     res.status(500).json(err);
   }
+});
+
+//upload image to firebase storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+});
+router.post("/:id/uploadImg", upload.single("file"), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).send("Error: No files found");
+  }
+  const blob = firebase.bucket.file(
+    "posts/" + req.params.id + "/" + req.body.name
+  );
+
+  const blobWriter = await blob.createWriteStream({
+    metadata: {
+      contentType: req.file.mimetype,
+    },
+  });
+
+  blobWriter.on("error", (err) => {
+    console.log(err);
+  });
+
+  blobWriter.on("finish", () => {
+    return res.status(200).json("File uploaded.");
+  });
+
+  blobWriter.end(req.file.buffer);
 });
 
 module.exports = router;
