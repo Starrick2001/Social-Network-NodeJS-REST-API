@@ -17,5 +17,6 @@
   "scripts": {
     "start": "nodemon index.js",
     "build": "webpack --config webpack.config.js"
-  }
+  },
+  "repository": "https://github.com/Starrick2001/Social-Network-NodeJS-REST-API.git"
 }
