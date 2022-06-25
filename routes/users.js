@@ -2,9 +2,7 @@ const router = require("express").Router();
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 
-//firebase
-const firebase = require("../firebase");
-const multer = require("multer");
+
 
 //update user
 router.put("/:id", async (req, res) => {
@@ -119,37 +117,5 @@ router.put("/:id/unfollow", async (req, res) => {
   }
 });
 
-//upload profilePicture to firebase storage
-const upload = multer({
-  storage: multer.memoryStorage(),
-});
-router.post(
-  "/:id/uploadProfilePicture",
-  upload.single("file"),
-  async (req, res) => {
-    if (!req.file) {
-      return res.status(400).send("Error: No files found");
-    }
-    const blob = firebase.bucket.file(
-      "users/" + req.params.id + "/" + req.body.name
-    );
-
-    const blobWriter = await blob.createWriteStream({
-      metadata: {
-        contentType: req.file.mimetype,
-      },
-    });
-
-    blobWriter.on("error", (err) => {
-      console.log(err);
-    });
-
-    blobWriter.on("finish", () => {
-      return res.status(200).json("File uploaded.");
-    });
-
-    blobWriter.end(req.file.buffer);
-  }
-);
 
 module.exports = router;
